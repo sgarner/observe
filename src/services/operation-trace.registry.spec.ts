@@ -560,23 +560,23 @@ describe("OperationTraceRegistry", () => {
     it("replaces the route name without changing request metadata or spans", async () => {
       registry.startTrace("custom", {
         protocol: "http",
-        attributes: { method: "POST", originalUrl: "/xml" },
+        attributes: { method: "POST", originalUrl: "/rpc" },
         tags: { tenant: "acme" },
       });
-      registry.addRouteMetadataToTrace("custom", 1, "/xml");
+      registry.addRouteMetadataToTrace("custom", 1, "/rpc");
       const spanId = registry.internalStartTraceStep(
         "custom",
-        "XmlController",
+        "RpcController",
         "handle",
         undefined,
       );
 
-      registry.setOperationId("custom", "/xml/initial");
-      registry.setOperationId("custom", "/xml/getOrders");
+      registry.setOperationId("custom", "/rpc/orders.get");
+      registry.setOperationId("custom", "/rpc/orders.list");
       registry.internalEndTraceStep(
         "custom",
         spanId,
-        "XmlController",
+        "RpcController",
         "handle",
         spanId,
       );
@@ -586,11 +586,11 @@ describe("OperationTraceRegistry", () => {
       expect(snapshot).toMatchObject({
         traceId: "custom",
         protocol: "http",
-        operationId: "/xml/getOrders",
-        attributes: { method: "POST", originalUrl: "/xml", statusCode: 201 },
+        operationId: "/rpc/orders.list",
+        attributes: { method: "POST", originalUrl: "/rpc", statusCode: 201 },
         tags: { tenant: "acme" },
         userId: "u-1",
-        traces: [{ spanId, className: "XmlController", methodKey: "handle" }],
+        traces: [{ spanId, className: "RpcController", methodKey: "handle" }],
       });
       expect(snapshot!.traces).toHaveLength(1);
     });
@@ -627,7 +627,7 @@ describe("OperationTraceRegistry", () => {
 
     it("does not create a snapshot for an unknown or unsampled trace", async () => {
       expect(() =>
-        registry.setOperationId("unsampled", "/xml/getOrders"),
+        registry.setOperationId("unsampled", "/rpc/orders.list"),
       ).not.toThrow();
       expect(registry.hasTrace("unsampled")).toBe(false);
       await expect(
@@ -650,7 +650,7 @@ describe("OperationTraceRegistry", () => {
         undefined,
       );
 
-      registry.setOperationId("job", "/xml/getOrders");
+      registry.setOperationId("job", "/rpc/orders.list");
       registry.internalEndTraceStep(
         "job",
         spanId,

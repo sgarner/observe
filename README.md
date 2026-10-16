@@ -165,8 +165,8 @@ export class ObserveConfig implements ObserveOptionsFactory {
 ## Custom request operation IDs
 
 HTTP requests are grouped by their route path. For single-endpoint RPC APIs,
-such as an XML API at `POST /xml`, inject `TracerService` and call
-`setOperationId()` from the handler after validating the call name:
+such as a JSON-RPC endpoint at `POST /rpc`, inject `TracerService` and call
+`setOperationId()` from the handler after validating the method name:
 
 ```ts
 import { TracerService } from "@nestjs/observe";
@@ -174,11 +174,11 @@ import { TracerService } from "@nestjs/observe";
 // Inject TracerService in your controller's constructor:
 constructor(private readonly tracerService: TracerService) {}
 
-// In the handler, after validating apiCall.callName:
-this.tracerService.setOperationId(`/xml/${apiCall.callName}`);
+// In the handler, after validating body.method:
+this.tracerService.setOperationId(`/rpc/${body.method}`);
 ```
 
-Requests can then be grouped as `/xml/getOrders` instead of all sharing `/xml`,
+Requests can then be grouped as `/rpc/orders.list` instead of all sharing `/rpc`,
 similar to the built-in GraphQL root-field naming. This changes only the
 operation ID, not the URL, HTTP method, tags, or spans. A value set in the
 handler overrides the route or GraphQL name; subsequent calls replace it.

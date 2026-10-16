@@ -173,7 +173,7 @@ describe("TracerService", () => {
       await inTrace("custom-key", async (spanId) => {
         await als.run(new Map([["requestId", "custom-key"]]), async () => {
           await Promise.resolve();
-          customKeyTracer.setOperationId("/xml/getOrders");
+          customKeyTracer.setOperationId("/rpc/orders.list");
         });
         registry.internalEndTraceStep(
           "custom-key",
@@ -186,7 +186,7 @@ describe("TracerService", () => {
       registry.endTrace("custom-key");
 
       expect(await registry.pluckSnapshot("custom-key")).toMatchObject({
-        operationId: "/xml/getOrders",
+        operationId: "/rpc/orders.list",
       });
     });
 
@@ -195,7 +195,7 @@ describe("TracerService", () => {
         await inTrace("internal", (internalSpan) => {
           als.getStore()!.set(TRACE_REGISTRY_KEY, "internal");
           als.getStore()!.set(TRACE_ID_KEY, "reported");
-          tracer.setOperationId("/xml/getOrders");
+          tracer.setOperationId("/rpc/orders.list");
           registry.internalEndTraceStep(
             "internal",
             internalSpan,
@@ -216,7 +216,7 @@ describe("TracerService", () => {
       registry.endTrace("reported");
 
       expect(await registry.pluckSnapshot("internal")).toMatchObject({
-        operationId: "/xml/getOrders",
+        operationId: "/rpc/orders.list",
       });
       expect(await registry.pluckSnapshot("reported")).toMatchObject({
         operationId: "GET /orders",
@@ -226,7 +226,7 @@ describe("TracerService", () => {
     it("is a no-op outside any async context", () => {
       const setOperationId = vi.spyOn(registry, "setOperationId");
 
-      expect(() => tracer.setOperationId("/xml/getOrders")).not.toThrow();
+      expect(() => tracer.setOperationId("/rpc/orders.list")).not.toThrow();
       expect(setOperationId).not.toHaveBeenCalled();
     });
 
@@ -236,7 +236,7 @@ describe("TracerService", () => {
         const setOperationId = vi.spyOn(registry, "setOperationId");
 
         als.run(new Map([[TRACE_ID_KEY, traceId]]), () => {
-          expect(() => tracer.setOperationId("/xml/getOrders")).not.toThrow();
+          expect(() => tracer.setOperationId("/rpc/orders.list")).not.toThrow();
         });
         expect(setOperationId).not.toHaveBeenCalled();
       },
@@ -244,7 +244,7 @@ describe("TracerService", () => {
 
     it("is a no-op for an unsampled request", () => {
       als.run(new Map([[TRACE_ID_KEY, "unsampled"]]), () => {
-        expect(() => tracer.setOperationId("/xml/getOrders")).not.toThrow();
+        expect(() => tracer.setOperationId("/rpc/orders.list")).not.toThrow();
       });
 
       expect(registry.hasTrace("unsampled")).toBe(false);

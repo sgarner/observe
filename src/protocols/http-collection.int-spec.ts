@@ -37,10 +37,10 @@ class OrdersController {
     throw new Error("deliberate");
   }
 
-  @Post("xml")
-  async xml(@Body("call") callName: string) {
+  @Post("rpc")
+  async rpc(@Body("method") method: string) {
     await Promise.resolve();
-    this.tracer.setOperationId(`/xml/${callName}`);
+    this.tracer.setOperationId(`/rpc/${method}`);
     return { ok: true };
   }
 }
@@ -161,19 +161,19 @@ describe("ObserveModule: HTTP collection", () => {
 
   it("keeps handler-defined operation ids separate on a shared route", async () => {
     await Promise.all(
-      ["getOrders", "getCustomers"].map((call) =>
-        request(app.getHttpServer()).post("/xml").send({ call }).expect(201),
+      ["orders.list", "customers.get"].map((method) =>
+        request(app.getHttpServer()).post("/rpc").send({ method }).expect(201),
       ),
     );
 
-    for (const call of ["getOrders", "getCustomers"]) {
+    for (const method of ["orders.list", "customers.get"]) {
       const snapshot = await waitForSnapshot(
         collected,
-        (item) => item.operationId === `/xml/${call}`,
+        (item) => item.operationId === `/rpc/${method}`,
       );
       expect(snapshot).toMatchObject({
         protocol: "http",
-        attributes: { method: "POST", originalUrl: "/xml", statusCode: 201 },
+        attributes: { method: "POST", originalUrl: "/rpc", statusCode: 201 },
       });
       expect(snapshot.traces.length).toBeGreaterThan(0);
     }
